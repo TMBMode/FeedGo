@@ -1,0 +1,24 @@
+{
+  "name": "feedgo",
+  "version": "1.0.0",
+  "description": "Feed, and then go!",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "echo ok"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TMBMode/FeedGo.git"
+  },
+  "author": "TMBMode",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TMBMode/FeedGo/issues"
+  },
+  "homepage": "https://github.com/TMBMode/FeedGo#readme",
+  "dependencies": {
+    "faiss-node": "^0.2.2",
+    "langchain": "^0.0.102"
+  }
+}
