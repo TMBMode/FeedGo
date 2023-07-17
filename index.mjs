@@ -1,5 +1,6 @@
 import readline from 'readline';
 import { makeChain, CHUNK } from "./handler/chain.mjs";
+import { color } from './utils/logging.mjs';
 
 process.env.OPENAI_API_KEY || (
   console.log('No API key given') ||
@@ -20,13 +21,14 @@ input = (q) =>
 );
 
 const name = await input('config > ');
-const chain = await makeChain(name, CHUNK.small);
+const chain = await makeChain(name, CHUNK.tiny);
 
 rl.on('line', async (line) => {
   line = line.trim();
+  if (!line) return;
   const res = await chain.call({
     question: line
   });
-  console.log(res);
+  console.log(`${color.bright}${color.green}${res.text.replace(/<\/\w+>$/, '')}${color.reset}\n`);
   return;
 });

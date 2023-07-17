@@ -45,7 +45,7 @@ export class Store {
       log.error(`${this.dataPath} doesn't exist`);
       return null;
     }
-    log.debug(`Load documents from ${this.dataPath}`);
+    log.debug(`Loading documents from ${this.dataPath}`);
     const loader = new DirectoryLoader(
       this.dataPath, {
         '.txt': (path) => new TextLoader(path)
@@ -56,14 +56,16 @@ export class Store {
       new RecursiveCharacterTextSplitter(this.chunkConf)
         .splitDocuments(docs)
     );
-    log.debug('Finish parsing documents, post embedding requests');
+    log.debug('Finished parsing documents, embedding...');
     const store = await FaissStore.fromDocuments(
       data,
       new OpenAIEmbeddings()
     );
     log.debug('Vector store build done');
+    this.vectorStore = store;
     await this.save();
-    return this.vectorStore = store;
+    log.notice('Vector store create done');
+    return store;
   }
   async save() {
     log.debug(`Save vector store to ${this.storePath}`);
@@ -77,28 +79,10 @@ export class Store {
         this.storePath,
         new OpenAIEmbeddings()
       );
+      log.notice('Vector store resumed');
       return true;
     } catch {
       return false;
     }
   }
 }
-
-
-
-export const run = async () => {
-  console.log('start');
-  const vectorStore = await FaissStore.fromTexts(
-    ["Hello world", "Bye bye", "hello nice world", "holy shit", "damn it!"],
-    [{ id: 2 }, { id: 1 }, { id: 3 }],
-    new OpenAIEmbeddings()
-  );
-  console.log('saving');
-  await vectorStore.save('data');
-  console.log('search');
-  const resultOne = await vectorStore.similaritySearch("fuck", 3);
-  console.log(resultOne);
-};
-
-//run();
-//FaissStore.load('idk',new OpenAIEmbeddings());
