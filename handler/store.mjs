@@ -8,34 +8,34 @@ import { log } from '../utils/logging.mjs';
 
 export const CHUNK = {
   tiny: {
-    chunkSize: 100,
-    chunkOverlap: 20
+    chunkSize: 80,
+    chunkOverlap: 16
   },
   small: {
-    chunkSize: 400,
-    chunkOverlap: 80
+    chunkSize: 320,
+    chunkOverlap: 64
   },
   medium: {
-    chunkSize: 1000,
-    chunkOverlap: 200
+    chunkSize: 800,
+    chunkOverlap: 160
   },
   large: {
-    chunkSize: 1800,
-    chunkOverlap: 360
+    chunkSize: 1440,
+    chunkOverlap: 288
   },
   huge: {
-    chunkSize: 4000,
-    chunkOverlap: 800
+    chunkSize: 3200,
+    chunkOverlap: 640
   }
 };
 
-const DATA_BASE_PATH = process.env.DATA_BASE_PATH ?? 'data';
-const STORE_BASE_PATH = process.env.STORE_BASE_PATH ?? 'vstores';
+const DATA_BASEPATH = process.env.DATA_BASEPATH ?? 'data';
+const STORE_BASEPATH = process.env.STORE_BASEPATH ?? 'vstores';
 
 export class Store {
-  constructor(name, chunk) {
-    this.dataPath = `${DATA_BASE_PATH}/${name}`;
-    this.storePath = `${STORE_BASE_PATH}/${name}`;
+  constructor({name, chunk}) {
+    this.dataPath = `${DATA_BASEPATH}/${name}`;
+    this.storePath = `${STORE_BASEPATH}/${name}`;
     this.chunkConf = chunk ?? CHUNK.medium;
     this.vectorStore = null;
   }
@@ -84,5 +84,13 @@ export class Store {
     } catch {
       return false;
     }
+  }
+  async getPrompt() {
+    if (!fs.existsSync(`${this.dataPath}/preset.conf`)) {
+      log.warn(`Conf file for ${this.dataPath} doesn't exist, using default`);
+      return '';
+    }
+    const data = fs.readFileSync(`${this.dataPath}/preset.conf`);
+    return data.toString().trim();
   }
 }

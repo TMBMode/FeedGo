@@ -1,4 +1,4 @@
-import { PromptTemplate } from "langchain";
+import { PromptTemplate } from "langchain/prompts";
 import { BaseChain, LLMChain, loadQAChain } from "langchain/chains";
 const question_generator_template = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
 
@@ -65,10 +65,10 @@ export class CRChain extends BaseChain {
             return chatHistory
                 .map((chatMessage) => {
                 if (chatMessage._getType() === "human") {
-                    return `用户：${chatMessage.text}`;
+                    return `${this.historyKey.human}${chatMessage.text}`;
                 }
                 else if (chatMessage._getType() === "ai") {
-                    return `智能助手：${chatMessage.text}`;
+                    return `${this.historyKey.bot}${chatMessage.text}`;
                 }
                 else {
                     return `${chatMessage.text}`;
@@ -117,6 +117,7 @@ export class CRChain extends BaseChain {
             return {
                 ...result,
                 sourceDocuments: docs,
+                newQuestion
             };
         }
         return result;
