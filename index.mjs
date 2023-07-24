@@ -1,4 +1,4 @@
-import readline from 'readline';
+import express from 'express';
 import { makeChain, CHUNK } from "./handler/chain.mjs";
 import { log, color, _log } from './utils/logging.mjs';
 
@@ -11,29 +11,34 @@ process.env.OPENAI_API_KEY || (
   process.exit()
 );
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: ''
-}),
-input = (q) =>
-  new Promise((resolve) => {
-    rl.question(q, (a) => {
-      resolve(a);
-    });
-  }
-);
+const app = express();
+const chains = [];
 
-const name = await input('config > ');
-const chain = await makeChain(name, CHUNK.small);
+app.post('/create', async (req, res) => {
+  const { uid, name, chunkSize } = JSON.parse(req.body);
+  if (chains[uid]) return res.status(200).send('found');
+  chains[uid] = await makeChain(name, CHUNK[chunkSize ?? 'small']);
+  return res.status.send('created');
+});
 
-rl.on('line', async (line) => {
-  line = line.trim();
-  if (!line) return;
-  const res = await chain.call({
-    question: line
+app.post('/complete', async (req, res) => {
+  const { uid, text } = JSON.parse(req.body);
+  if (!chains[uid]) return res.status(404).send('not found');
+  const data = await chains[uid].call({
+    question: text
   });
-  _log(`${color.bright}${color.green}${res.text.replace(/<\/\w+>$/, '')}${color.reset}\n`);
-  _log(res.sourceDocuments.map(s=>`-----------\n${s.pageContent}\n${s?.metadata?.source?.split('/')?.slice(-1)[0]}@l${s?.metadata?.loc?.lines?.from}-${s?.metadata?.loc?.lines?.to}\n\n`))
-  return;
+  return res.status(200).send(JSON.stringify({
+    text: data.text?.replace(/<\/\w+>$/, ''),
+    sources: data.sourceDocuments?.map((src) => ({
+      text: src.pageContent,
+      location:
+        `${src.metadata?.source?.split('/')?.slice(-1)[0]}, ` +
+        `${sumPageNum(src.metadata?.loc?.lines?.from, src.metadata?.loc?.lines?.to)}`,
+    })),
+    summarize: data.newQuestion
+  }));
+});
+
+app.listen('7723', () => {
+  log.notice('FeedGo API listening on port 7723, ready to serve!');
 });
