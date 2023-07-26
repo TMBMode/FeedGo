@@ -1,7 +1,7 @@
 import { getTime } from "./functions.mjs";
 
 export const _log = console.log;
-console.log = debug;
+console.log = (x) => debug(JSON.stringify(x));
 
 const isDebug = eval(process.env.DEBUG) ?? true;
 info(`Debug: ${isDebug}`);

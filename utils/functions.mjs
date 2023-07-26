@@ -21,6 +21,17 @@ export const generateUid = (len=6) => {
   return res;
 }
 
+export const sumPageNum = (a, b) => {
+  let r = '';
+  [a, b] = [`${a}`, `${b}`];
+  if (a.length !== b.length) return `${a}-${b}`;
+  for (let i in a) {
+    i = parseInt(i);
+    if (a[i] === b[i]) r += a[i];
+    else return `${r}${a.slice(-a.length+i)}-${b.slice(-b.length+i)}`;
+  } return a;
+}
+
 export const getTime = () => {
   const date = new Date();
   const

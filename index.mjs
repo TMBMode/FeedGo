@@ -1,6 +1,7 @@
 import express from 'express';
 import { makeChain, CHUNK } from "./handler/chain.mjs";
 import { log, color, _log } from './utils/logging.mjs';
+import { sumPageNum } from './utils/functions.mjs';
 
 /*
 EDIT ./node_modules/langchain/dist/memory/base.js line 13-16 => return inputValues[keys[0]];
@@ -14,16 +15,21 @@ process.env.OPENAI_API_KEY || (
 const app = express();
 const chains = [];
 
+app.use(express.json());
+
 app.post('/create', async (req, res) => {
-  const { uid, name, chunkSize } = JSON.parse(req.body);
-  if (chains[uid]) return res.status(200).send('found');
-  chains[uid] = await makeChain(name, CHUNK[chunkSize ?? 'small']);
-  return res.status.send('created');
+  const { uid, name } = req.body;
+  log.info(`Create #${uid} '${name}'`);
+  if (chains[uid]) return res.status(200).send(JSON.stringify({message: 'Found'}));
+  chains[uid] = await makeChain({name, chunk: CHUNK.small});
+  if (chains[uid]) return res.status(201).send(JSON.stringify({message: 'Created'}));
+  return res.status(500).send(JSON.stringify({message: 'Error'}));
 });
 
 app.post('/complete', async (req, res) => {
-  const { uid, text } = JSON.parse(req.body);
-  if (!chains[uid]) return res.status(404).send('not found');
+  const { uid, text } = req.body;
+  log.info(`Complete #${uid} '${text}'`);
+  if (!chains[uid]) return res.status(404).send(JSON.stringify({message: 'Not Found'}));
   const data = await chains[uid].call({
     question: text
   });
@@ -32,7 +38,7 @@ app.post('/complete', async (req, res) => {
     sources: data.sourceDocuments?.map((src) => ({
       text: src.pageContent,
       location:
-        `${src.metadata?.source?.split('/')?.slice(-1)[0]}, ` +
+        `${src.metadata?.source?.replaceAll('\\','/')?.split('/')?.slice(-1)[0]}, ` +
         `${sumPageNum(src.metadata?.loc?.lines?.from, src.metadata?.loc?.lines?.to)}`,
     })),
     summarize: data.newQuestion

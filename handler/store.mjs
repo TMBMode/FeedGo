@@ -45,7 +45,7 @@ export class Store {
       log.error(`${this.dataPath} doesn't exist`);
       return null;
     }
-    log.debug(`Loading documents from ${this.dataPath}`);
+    log.debug(`Loading documents from ${this.dataPath} ...`);
     const loader = new DirectoryLoader(
       this.dataPath, {
         '.txt': (path) => new TextLoader(path)
@@ -61,19 +61,19 @@ export class Store {
       data,
       new OpenAIEmbeddings()
     );
-    log.debug('Vector store build done');
+    log.debug('Vector store build done, saving...');
     this.vectorStore = store;
     await this.save();
     log.notice('Vector store create done');
     return store;
   }
   async save() {
-    log.debug(`Save vector store to ${this.storePath}`);
+    log.debug(`Saving vector store to ${this.storePath} ...`);
     return await this.vectorStore.save(this.storePath);
   }
   async resume() {
     if (!fs.existsSync(this.storePath)) return false;
-    log.debug(`Resume vector store from ${this.storePath}`);
+    log.debug(`Resuming vector store from ${this.storePath} ...`);
     try {
       this.vectorStore = await FaissStore.load(
         this.storePath,
@@ -86,11 +86,19 @@ export class Store {
     }
   }
   async getPrompt() {
-    if (!fs.existsSync(`${this.dataPath}/preset.conf`)) {
-      log.warn(`Conf file for ${this.dataPath} doesn't exist, using default`);
-      return '';
+    if (!fs.existsSync(`${this.dataPath}/prompt.conf`)) {
+      log.warn(`'prompt.conf' under ${this.dataPath} doesn't exist, using default`);
+      return null;
     }
-    const data = fs.readFileSync(`${this.dataPath}/preset.conf`);
+    const data = fs.readFileSync(`${this.dataPath}/prompt.conf`);
+    return data.toString().trim();
+  }
+  async getName() {
+    if (!fs.existsSync(`${this.dataPath}/name.conf`)) {
+      log.warn(`'name.conf' under ${this.dataPath} doesn't exist, using default`);
+      return null;
+    }
+    const data = fs.readFileSync(`${this.dataPath}/name.conf`);
     return data.toString().trim();
   }
 }
