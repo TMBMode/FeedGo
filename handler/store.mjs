@@ -158,3 +158,31 @@ export const getDatasets = async () => {
     (fileName) => fs.statSync(path.join(DATA_BASEPATH,fileName)).isDirectory()
   );
 }
+
+// handle upload
+export const saveData = async ({ name, files }) => {
+  const dataPath = path.join(DATA_BASEPATH,name);
+  if (fs.existsSync(dataPath)) {
+    return {
+      ok: false,
+      code: 409,
+      msg: `conf named '${name}' already exists`
+    }
+  }
+  if (!files?.[0]) {
+    return {
+      ok: false,
+      code: 400,
+      msg: 'invalid files'
+    }
+  }
+  for (let file of files) {
+    const { fileName, content } = file;
+    fs.writeFileSync(path.join(dataPath,fileName), content);
+  }
+  return {
+    ok: true,
+    code: 201,
+    msg: `saved upload dataset ${name}`
+  }
+}
