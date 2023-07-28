@@ -75,7 +75,12 @@ export class Store {
   // save base to STORE
   async save() {
     log.debug(`Saving vector store to ${this.storePath} ...`);
-    return await this.vectorStore.save(this.storePath);
+    await this.vectorStore.save(this.storePath);
+    const confs = fs.readdirSync(this.dataPath).filter((fileName) => fileName.endsWith('.conf'));
+    for (let file of confs) {
+      fs.copyFileSync(path.join(this.dataPath, file), path.join(this.storePath, file));
+    }
+    return true;
   }
   // try to resume base from STORE
   async resume() {
@@ -169,6 +174,7 @@ export const saveData = async ({ name, files }) => {
       msg: `conf named '${name}' already exists`
     }
   }
+  fs.mkdirSync(dataPath);
   if (!files?.[0]) {
     return {
       ok: false,

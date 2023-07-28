@@ -1,6 +1,6 @@
 import express from 'express';
 import { makeChain, CHUNK } from "./handler/chain.mjs";
-import { log, color, _log } from './utils/logging.mjs';
+import { _log, log } from './utils/logging.mjs';
 import { sumPageNum } from './utils/functions.mjs';
 import { getDatasets, getStores, saveData } from './handler/store.mjs';
 import { loadAll } from './handler/store.mjs';
@@ -77,7 +77,7 @@ app.post('/complete', async (req, res) => {
 
 app.listen(PORT, () => {
   log.notice(`FeedGo API listening on port ${PORT}, ready to se${
-    'r'.repeat(max(parseInt(parseInt(`${PORT}`)/1000), 20))
+    'r'.repeat(Math.min(parseInt(parseInt(`${PORT}`)/1000), 18))
   }ve!`);
 });
 
